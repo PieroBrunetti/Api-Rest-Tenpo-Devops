@@ -1,0 +1,51 @@
+Para correr:
+# docker run -p 3306:3306 -d --name mariadb_test -e MYSQL_ROOT_PASSWORD='test' -e MYSQL_DATABASE='test' mariadb:10.5.9-focal
+
+docker run --name piero_db -p 5432:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_USER='root' -e POSTGRES_DB='test' -d postgres
+sleep 20
+
+
+Para desarrollar
+DEBUG=nodejsapiauth:* npm start
+
+el curl debe dar 404
+curl -v -H "Content-Type: application/json" -X POST -d'{"username":"foo","password":"BAR"}' http://127.0.0.1:3000/api/auth/signin
+
+
+docker:
+Para construir la imagen
+docker build -t piero .
+Para correrla:
+docker run --rm -e DB_HOST='172.17.0.1' --name piero piero
+despues en otro terminal usamos la ip 172.17.0.3, en tu computador puede ser diferente
+
+curl -v -H "Content-Type: application/json" -X POST -d'{"username":"foo","password":"BAR"}' http://172.17.0.3/api/auth/signin
+el curl debe dar error 404
+
+
+curl -v -H "Content-Type: application/json" -X POST -d'{"username":"foo","password":"BAR"}' http://172.17.0.3/api/auth/signup
+
+
+Creamos un usuario
+curl -v -H "Content-Type: application/json" -X POST -d'{"username":"enzo","password":"BAR"}' http://172.17.0.3/api/auth/signup
+
+
+curl -v -H "Content-Type: application/json" -X POST -d'{"username":"enzo","password":"BAR"}' http://172.17.0.3/api/auth/signin | jq '.accessToken'
+token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjIyMDQxODcxLCJleHAiOjE2MjIwNDE5NTd9.7DkvANY24i-xvC1I0MEhvnH37wiO85SWheDJjWUyX_Q'
+curl -v -H "x-access-token: $token" -H "Content-Type: application/json" -X POST -d '[3,8]' http://127.0.0.1:3000/api/add
+
+#
+Para iniciar sesion mas facil:
+token=$(curl -H "Content-Type: application/json" -X POST -d'{"username":"enzo","password":"BAR"}' http://127.0.0.1:3000/api/auth/signin | jq '.accessToken'|tr -d '"')
+curl -v -H "x-access-token: $token" -H "Content-Type: application/json" -X POST -d '[3,8]' http://127.0.0.1:3000/api/add
+
+Comandos usados para crear el proyecto:
+yay -Sy nodejs-express-generator
+express  --no-view nodejsapiauth
+npm install sequelize mysql2 body-parser cors jsonwebtoken bcryptjs --save
+npm install dotenv --save
+
+tutorial:
+- https://bezkoder.com/node-js-jwt-authentication-mysql/#Token_Based_Authentication
+- https://www.npmjs.com/package/dotenv
+
